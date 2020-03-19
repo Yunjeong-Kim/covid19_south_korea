@@ -1,4 +1,4 @@
-# cCOVID-19 in South Korea
+# COVID-19 in South Korea
 This repository is for the COVID-19 in South Korea mapping project for "Data Science for Public Health 1" at Johns Hopkins Bloomberg School of Public Health
 
 * Data source
