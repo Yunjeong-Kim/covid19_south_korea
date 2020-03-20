@@ -1,0 +1,116 @@
+---
+title: "map_Korean_covid19_testing_center"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source_code: embed
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+Sys.setlocale("LC_ALL", "Korean")
+library(readr)
+library(flexdashboard)
+library(shiny)
+library(leaflet)
+library(dplyr)
+
+```
+
+```{r}
+
+urlfile= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/korea_testing_center.csv"
+korean <- read_csv(url(urlfile), locale = locale(date_names = "he", encoding = "UTF-8"))
+
+#define sigungu
+korean$singungu <- as.factor(korean$singungu)
+korean$sido <- as.factor(korean$sido)
+sidoname <- levels(korean$sido)
+#singunguname <- levels(korean$singungu)
+```
+
+Test Centers
+======================================================================
+
+Input {.sidebar}
+-----------------------------------------------------------------------
+
+### Select your area
+
+```{r}
+        
+# define inputs
+library(dplyr)
+selectInput("sido", label = "City or Province", choices = sidoname)
+
+  selectedSido <- list(reactive(as.factor(input$sido)))
+  selectedData = korean %>%
+    select(singungu) %>%
+    filter(korean$sido==selectedSido)
+  singunguname <- levels(selectedData$singungu)
+  
+selectInput("sigungu", label = "County", choices = singunguname)
+        
+```
+
+Column {data-width=2500}
+-----------------------------------------------------------------------
+
+### COVID19 Test Center in your Selected Area
+
+```{r}
+# filter the data to the selected region/district
+
+filtereddata <- reactive({
+        filter(korean, sido == input$sido)
+        }
+        )
+# Draw the map that shows the testing center
+renderLeaflet({
+        leaflet(filtereddata()) %>%
+        addProviderTiles("CartoDB.Positron") %>%
+       addMarkers(lng = ~lon, lat = ~lat, popup = ~telephone)
+  
+})
+
+# click event(testing center) for the map
+# will generate detailed infor of the testing center
+
+click_tract <- eventReactive(input$map_tile_click,{
+        
+}
+                             
+)
+```
+
+Statistics
+======================================================================
+
+Column
+-----------------------------------------------------------------------
+### COVID-19 South Korea Map 
+```{r}
+```
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+```{r}
+library(plotly)
+library(ggplot2)
+urlfile2= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/daily_total.csv"
+dat <- read_csv(url(urlfile2))
+covid19 <- data.frame(t(dat[-1]))
+colnames(covid19)[1:5] <- c("test", "negative", "confirmed", "released", "death")
+covid19<-tibble::rownames_to_column(covid19, "date") 
+```
+
+```{r}
+  ggplot(covid19, aes(x=date, y=confirmed)) +
+        geom_bar(stat="identity") + 
+        theme(axis.text.x=element_text(angle=45,hjust=1))
+  
+
+```
