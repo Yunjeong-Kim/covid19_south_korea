@@ -3,3 +3,8 @@ This repository is for the COVID-19 in South Korea mapping project for "Data Sci
 
 * Data source
   : The data were extracted from [DC4C (Data Science for COVID19)](https://github.com/jihoo-kim/Data-Science-for-COVID-19) and edited with additional data from [Korea Center for Disease Control and Prevention(KCDC)](https://www.cdc.go.kr/cdc_eng/)
+
+
+
+# Flexnboard app (havent finished)
+https://shudi.shinyapps.io/covid19project/
