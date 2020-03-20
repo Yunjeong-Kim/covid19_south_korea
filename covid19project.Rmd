@@ -16,7 +16,8 @@ library(flexdashboard)
 library(shiny)
 library(leaflet)
 library(dplyr)
-korean <- read_csv("~/korea_testing_center.csv", locale = locale(date_names = "he", encoding = "UTF-8"))
+urlfile= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/korea_testing_center.csv"
+korean <- read_csv(url(urlfile), locale = locale(date_names = "he", encoding = "UTF-8"))
 
 #define sigungu
 korean$singungu <- as.factor(korean$singungu)
