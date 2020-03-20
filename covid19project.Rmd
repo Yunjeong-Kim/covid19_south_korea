@@ -1,0 +1,77 @@
+---
+title: "map_Korean_covid19_testing_center"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source_code: embed
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+Sys.setlocale("LC_ALL", "Korean")
+library(readr)
+library(flexdashboard)
+library(shiny)
+library(leaflet)
+library(dplyr)
+korean <- read_csv("~/korea_testing_center.csv", locale = locale(date_names = "he", encoding = "UTF-8"))
+
+#define sigungu
+korean$singungu <- as.factor(korean$singungu)
+korean$sido <- as.factor(korean$sido)
+singunguname <- levels(korean$singungu)
+sidoname <- levels(korean$sido)
+
+```
+Sidebar {.sidebar}
+======================================================================
+
+```{r}
+        
+# define inputs
+
+selectInput("sigungu", label = "sigungu", choices = singunguname)
+selectInput("sido", label = "sido", choices = sidoname)
+```
+
+
+Maps
+======================================================================
+
+
+```{r}
+
+
+        
+```
+
+-------------------------------------
+
+```{r}
+# filter the data to the selected region/district
+
+filtereddata <- reactive({
+        filter(korean, sido == input$sido)
+        }
+        )
+# Draw the map that shows the testing center
+renderLeaflet({
+        leaflet(filtereddata()) %>%
+        addProviderTiles("CartoDB.Positron") %>%
+       addMarkers(lng = ~lon, lat = ~lat, popup = ~telephone)
+  
+})
+
+# click event(testing center) for the map
+# will generate detailed infor of the testing center
+
+click_tract <- eventReactive(input$map_tile_click,{
+        
+}
+                             
+)
+```
+```
+
