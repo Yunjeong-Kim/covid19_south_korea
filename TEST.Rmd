@@ -87,8 +87,8 @@ input {.sidebar}
 ```{r}
 
 # define inputs
-selectInput("sido", label = "City", choices = sidoname)
-selectInput("sigungu", label = "Sigungu", choices = singunguname)
+selectInput("sido", label = "City or Province", choices = sidoname)
+selectInput("sigungu", label = "County", choices = singunguname)
 
 
 # filter the data to the selected region/district
