@@ -1,0 +1,205 @@
+---
+title: "COVID19_SouthKorea"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source_code: embed
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+install.packages("coronavirus",repos = "http://cran.us.r-project.org")
+install.packages("leafpop",repos = "http://cran.us.r-project.org")
+library(readr)
+library(flexdashboard)
+library(shiny)
+library(leaflet)
+library(dplyr)
+library(RColorBrewer)
+library(coronavirus)
+library(leaflet)
+library(leafpop)
+library(purrr)
+data(coronavirus)
+`%>%` <- magrittr::`%>%`
+#------------------ Parameters ------------------
+# Set colors
+# https://www.w3.org/TR/css-color-3/#svg-color
+confirmed_color <- "purple"
+active_color <- "#1f77b4"
+recovered_color <- "forestgreen"
+death_color <- "red"
+#------------------ Data ------------------
+df <- coronavirus %>% 
+  # dplyr::filter(date == max(date)) %>%
+  dplyr::group_by(Country.Region, type) %>%
+  dplyr::summarise(total = sum(cases)) %>%
+  tidyr::pivot_wider(names_from =  type, 
+                     values_from = total) %>%
+  dplyr::mutate(unrecovered = confirmed - ifelse(is.na(recovered), 0, recovered) - ifelse(is.na(death), 0, death)) %>%
+  dplyr::arrange(-confirmed) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(country = dplyr::if_else(Country.Region == "United Arab Emirates", "UAE", Country.Region)) %>%
+  dplyr::mutate(country = dplyr::if_else(country == "Mainland China", "China", country)) %>%
+  dplyr::mutate(country = dplyr::if_else(country == "North Macedonia", "N.Macedonia", country)) %>%
+  dplyr::mutate(country = trimws(country)) %>%
+  dplyr::mutate(country = factor(country, levels = country))
+
+df_daily <- coronavirus %>% 
+  dplyr::group_by(date, type) %>%
+  dplyr::summarise(total = sum(cases, na.rm = TRUE)) %>%
+  tidyr::pivot_wider(names_from = type,
+                     values_from = total) %>%
+  dplyr::arrange(date) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(active =  confirmed - death - recovered) %>%
+  dplyr::mutate(confirmed_cum = cumsum(confirmed),
+                death_cum = cumsum(death),
+                recovered_cum = cumsum(recovered),
+                active_cum = cumsum(active))
+  
+
+df1 <- coronavirus %>% dplyr::filter(date == max(date))
+
+
+
+urlfile= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/COVID19_screening_centers.csv"
+korean <- read_csv(url(urlfile), locale = locale(date_names = "he", encoding = "UTF-8"))
+
+#define sigungu
+korean$sigungu <- as.factor(korean$sigungu)
+korean$sido <- as.factor(korean$sido)
+singunguname <- levels(korean$sigungu)
+sidoname <- levels(korean$sido)
+
+```
+
+
+
+
+Korea
+=======================================
+
+input {.sidebar}
+----------
+```{r}
+
+# define inputs
+selectInput("sido", label = "Sido", choices = sidoname)
+selectInput("sigungu", label = "Sigungu", choices = singunguname)
+
+# filter the data to the selected region/district
+```
+
+output
+----------
+```{r}
+filtereddata <- reactive({
+        filter(korean, sido == input$sido)%>%
+  filter(sigungu %in% input$sigungu)
+  
+  })
+conditional <- function(condition, success) {
+    if (condition) success else TRUE
+}
+
+ 
+# Draw the map that shows the testing center
+
+
+pal <- colorFactor(
+    palette = c("#078abd", "#a907bd"),
+    levels = c("O", "X"), domain=korean$screentest
+)
+  
+
+icons <- awesomeIcons(
+  icon = 'hospital-o',  
+  library = 'fa',
+    iconColor = "#FFFFFF")
+
+
+renderLeaflet({leaflet(filtereddata()) %>%
+addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
+  addProviderTiles('Esri.WorldImagery',group='Imagery') %>%
+  addLayersControl(baseGroups=c('Streets','Imagery'),options = layersControlOptions(collapsed = F, autoZIndex =T)) %>% 
+    addAwesomeMarkers(lng= ~lon, lat= ~lat, icon= icons, popup= ~centername) 
+  })
+ 
+
+
+
+
+
+# click event(testing center) for the map
+# will generate detailed infor of the testing center
+```
+
+World
+===========================================================
+Column
+-----------------------------------------------------------------------
+### COVID-19 World Map 
+```{r}
+
+# map tab added by Art Steinmetz
+cv_data_for_plot <- coronavirus %>% 
+  dplyr::filter(cases > 0) %>% 
+  dplyr::group_by(Country.Region,Province.State,Lat,Long,type) %>% 
+  dplyr::summarise(cases = sum(cases)) %>% 
+  dplyr::mutate(log_cases = 2 * log(cases)) %>% 
+  dplyr::ungroup()
+cv_data_for_plot.split <- cv_data_for_plot %>% split(cv_data_for_plot$type)
+pal <- colorFactor(c("orange", "red","green"), domain = c("confirmed", "death","recovered"))
+map_object <- leaflet() %>% addProviderTiles(providers$Stamen.Toner)
+names(cv_data_for_plot.split) %>%
+  purrr::walk( function(df) {
+    map_object <<- map_object %>%
+      addCircleMarkers(data=cv_data_for_plot.split[[df]],
+                 lng=~Long, lat=~Lat,
+#                 label=~as.character(cases),
+                 color = ~pal(type),
+                 stroke = FALSE,
+                 fillOpacity = 0.8,
+                 radius = ~log_cases,
+                 popup =  leafpop::popupTable(cv_data_for_plot.split[[df]],
+                                              feature.id = FALSE,
+                                              row.numbers = FALSE,
+                                              zcol=c("type","cases","Country.Region","Province.State")),
+                 group = df,
+#                 clusterOptions = markerClusterOptions(removeOutsideVisibleBounds = F),
+                 labelOptions = labelOptions(noHide = F,
+                                             direction = 'auto'))
+  })
+map_object %>%
+  addLayersControl(
+    overlayGroups = names(cv_data_for_plot.split),
+    options = layersControlOptions(collapsed = FALSE) 
+  )
+```
+
+
+Graph
+============================
+Column {.tabset}
+-----------------------------------------------------------------------
+
+```{r}
+library(plotly)
+library(ggplot2)
+urlfile2= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/daily_total.csv"
+dat <- read_csv(url(urlfile2))
+covid19 <- data.frame(t(dat[-1]))
+colnames(covid19)[1:5] <- c("test", "negative", "confirmed", "released", "death")
+covid19<-tibble::rownames_to_column(covid19, "date") 
+```
+
+```{r}
+  ggplot(covid19, aes(x=date, y=confirmed)) +
+        geom_bar(stat="identity") + 
+        theme(axis.text.x=element_text(angle=45,hjust=1))
+  
+
+```
