@@ -3,6 +3,7 @@ This repository is for the COVID-19 in South Korea mapping project for "Data Sci
 
 # COVID-19 in South Korea
 * Team Members and Role
+
 *Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)*
 
 *Shudi Pan (Johns Hopkins Bloomberg School of Public Health)*
