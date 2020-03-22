@@ -18,9 +18,9 @@ We have two sections in our app. The first section is an interactive map which s
   
 # Team Members and Role
 
-*Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)*
+*Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)* : 
 
-*Shudi Pan (Johns Hopkins Bloomberg School of Public Health)*
+*Shudi Pan (Johns Hopkins Bloomberg School of Public Health)* : Coding for the basic structure of the interactive map of COVID-19 testing centers as well as further improvements. 
 
 *Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 data, Coding for visualization of COVID-19 statistics (plotting and mapping) 
 
