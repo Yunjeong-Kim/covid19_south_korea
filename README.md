@@ -18,5 +18,5 @@ We have two sections in our app. The first section is an interactive map which s
   
   
 # Acknowledgements
-Thanks sincerely to *JunYoung Kim*(University of Nevada Las Vegas, DataX Lab) for his contribution to data collection.
+Thanks sincerely to *JunYoung Kim (University of Nevada Las Vegas, DataX Lab)* for his contribution to data collection.
 
