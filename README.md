@@ -9,7 +9,7 @@ We have two sections in our app. The first section is an interactive map which s
 ## Covid19 Testing Center Map 
 * Data source
   
- We have two sections in our app. The first section is an interactive map which shows all testing centers in South Korea. The data were scrapped from Korean Ministry of Health and Welfare[https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0]. We added the GPS data (latitude and longitude) of each testing center based on google map. We color-coded the testing centers according to COVID-19 testing availability and also included detailed information of each testing center. 
+ We have two sections in our app. The first section is an interactive map which shows all testing centers in South Korea. The data were scrapped from Korean [Ministry of Health and Welfare](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0). We added the GPS data (latitude and longitude) of each testing center based on google map. We color-coded the testing centers according to COVID-19 testing availability and also included detailed information of each testing center. 
 
 ## Statistics 
 * Data source
