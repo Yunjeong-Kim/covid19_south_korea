@@ -19,5 +19,5 @@ We have two sections in our app. The first section is an interactive map which s
 https://shudi.shinyapps.io/covid19project/
 
 # Acknowledgements
-Thanks sincerely to JunYoung Kim for contributing to data collection.
+Thanks sincerely to JunYoung Kim for his contribution to data collection.
 
