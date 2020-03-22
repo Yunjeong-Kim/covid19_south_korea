@@ -57,19 +57,20 @@ korean <- mutate(korean, centerinformation=paste0('<strong>Center Name: </strong
                                           '<br><strong>Address:</strong> ', address,
                                           '<br><strong>Telephone:</strong> ', telephone
                                          )) 
-filtereddata <- reactive({
-  if (input$sido== "All testing centers"){
-    korean
-  } else{
-      
-        filter(korean, sido == input$sido)%>%
+
+ filtereddata <- reactive({
+                if (input$sido== "All testing centers"){
+                        korean
+                } else{
+                        filter(korean, sido == input$sido)%>%
   filter(sigungu %in% input$sigungu)
-}
-      })
-
-
-
-
+                }
+        })
+observeEvent(input$sido,{
+        updateSelectInput(
+                session,"sigungu", choices = korean$sigungu[korean$sido == input$sido]
+        )
+})
 
  
 # Draw the map that shows the testing center
@@ -90,12 +91,6 @@ addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
   })
  
 
-
-
-
-
-# click event(testing center) for the map
-# will generate detailed infor of the testing center
 ```
 
 
