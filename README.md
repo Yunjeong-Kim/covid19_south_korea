@@ -17,3 +17,7 @@ We have two sections in our app. The first section is an interactive map which s
   
 # Flexnboard app (havent finished)
 https://shudi.shinyapps.io/covid19project/
+
+# Acknowledgements
+Thanks sincerely to JunYoung Kim for contributing to data collection.
+
