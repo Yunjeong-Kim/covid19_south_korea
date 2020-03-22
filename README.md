@@ -2,7 +2,7 @@
 This repository is for the COVID-19 in South Korea mapping project for "Data Science for Public Health 1" at Johns Hopkins Bloomberg School of Public Health. 
 
 # COVID-19 South Korea App
-https://shudi.shinyapps.io/covid19project/
+https://taeeun-kwon.shinyapps.io/covid19_SouthKorea/
 
 We have two sections in our app. The first section is an interactive map which shows all COVID-19 testing centers in South Korea, and the second section is the statistics of cumulative, daily and released cases in South Korea from January to current time. 
 
