@@ -3,9 +3,11 @@ This repository is for the COVID-19 in South Korea mapping project for "Data Sci
 
 # COVID-19 in South Korea
 * Team Members and Role
-Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)
-Shudi Pan (Johns Hopkins Bloomberg School of Public Health)
-Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health) : Collecting COVID-19 data, Coding for visualization of COVID-19 data (plotting and mapping) 
+*Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)*
+
+*Shudi Pan (Johns Hopkins Bloomberg School of Public Health)*
+
+*Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 data, Coding for visualization of COVID-19 data (plotting and mapping) 
 
 # COVID-19 South Korea App
 https://shudi.shinyapps.io/covid19project/
