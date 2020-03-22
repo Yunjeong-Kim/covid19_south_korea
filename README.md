@@ -14,7 +14,7 @@ We have two sections in our app. The first section is an interactive map which s
 ## 2. Statistics 
 * Data source
 
- The data were extracted from [DC4C (Data Science for COVID19)](https://github.com/jihoo-kim/Data-Science-for-COVID-19) and edited with additional data from [Korea Center for Disease Control and Prevention(KCDC)](https://www.cdc.go.kr/cdc_eng/).
+ The data were extracted from [DS4C (Data Science for COVID19)](https://github.com/jihoo-kim/Data-Science-for-COVID-19) and edited with additional data from [Korea Center for Disease Control and Prevention(KCDC)](https://www.cdc.go.kr/cdc_eng/).
   
   
 # Acknowledgements
