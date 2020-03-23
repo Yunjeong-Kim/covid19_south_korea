@@ -22,7 +22,7 @@ We have two sections in our app. The first section is an interactive map which s
 
 *Shudi Pan (Johns Hopkins Bloomberg School of Public Health)* : Coding for the basic structure of the interactive map of COVID-19 testing centers as well as further improvements. 
 
-*Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 data, Coding for visualization of COVID-19 statistics (plotting and mapping) 
+*Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 case data, Designing the overall structure of the Statistic Page, Coding for visualization of COVID-19 statistics (including plotting and mapping) in the statistic page.
 
 # Acknowledgements
 Thanks sincerely to *JunYoung Kim (University of Nevada Las Vegas, DataX Lab)* for his contribution to data collection.
