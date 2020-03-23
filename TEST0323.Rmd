@@ -76,15 +76,15 @@ icons <- awesomeIcons(
   icon = 'hospital-o',  
   library = 'fa',
     iconColor = ~pal(screentest))
-renderLeaflet({leaflet(filtereddata()) %>%
+output$map <- renderLeaflet({leaflet(filtereddata()) %>%
 addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
   addProviderTiles('Esri.WorldImagery',group='Imagery') %>%
   addLayersControl(baseGroups=c('Streets','Imagery'),options = layersControlOptions(collapsed = F, autoZIndex =T)) %>% 
     addCircleMarkers(data= filtereddata(), lng= ~lon, lat= ~lat, color=~pal(screentest))  %>%
     addAwesomeMarkers(lng=~lon, lat=~lat, icon=icons, popup= ~centerinformation) %>% addLegend(pal=pal, values=~screentest, title="Covid-19 test", opacity=1, position="bottomright")
   })
+leafletOutput('map', height=800)
 
-leafletOutput('map', height=0)
 ```
 <font size="1"> Source:[Ministry of Health and Welfare, South Korea](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0)</font>
 
