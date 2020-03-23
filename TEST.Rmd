@@ -1,0 +1,351 @@
+---
+title: "COVID19_SouthKorea"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    social: menu
+    source_code: embed
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(flexdashboard)
+library(shiny)
+library(leaflet)
+library(dplyr)
+library(RColorBrewer)
+urlfile= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/COVID19_screening_centers.csv"
+korean <- read_csv(url(urlfile), locale = locale(date_names = "he", encoding = "UTF-8"))
+#define sigungu
+korean$sigungu <- as.factor(korean$sigungu)
+korean$sido <- as.factor(korean$sido)
+singunguname <- levels(korean$sigungu)
+sidoname <- levels(korean$sido)
+sidoname <- append(sidoname, "All testing centers")
+```
+
+
+
+
+Map
+=======================================
+
+input {.sidebar}
+----------
+```{r}
+# define inputs
+inputPanel( h3('COVID-19 Testing Centers') ) 
+inputPanel(h4('Select your area'), selectInput("sido", label = "City or Province", choices = sidoname, selected ="All testing centers", width=180),
+selectInput("sigungu", label = "County", choices = singunguname, width=180))
+```
+
+<font size="2">Last Updated at</font>
+```{r}
+inputPanel(h6('03/23/2020'), style = "border-color: #00b4db" ) 
+```
+
+
+
+output
+----------
+```{r}
+korean <- mutate(korean, centerinformation=paste0('Center Name: ',centername,
+                                          '<br>Address: ', address,
+                                          '<br>Telephone: ', telephone
+                                         )) 
+ filtereddata <- reactive({
+                if (input$sido== "All testing centers"){
+                        korean
+                } else{
+                        filter(korean, sido == input$sido)%>%
+  filter(sigungu %in% input$sigungu)
+                }
+        })
+observeEvent(input$sido,{
+        updateSelectInput(
+                session,"sigungu", choices = korean$sigungu[korean$sido == input$sido]
+        )
+})
+ 
+# Draw the map that shows the testing center
+pal <- colorFactor(c("#87CEEB", "#ff073a"), domain = c("O", "X"))
+icons <- awesomeIcons(
+  icon = 'hospital-o',  
+  library = 'fa',
+    iconColor = ~pal(screentest))
+renderLeaflet({leaflet(filtereddata()) %>%
+addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
+  addProviderTiles('Esri.WorldImagery',group='Imagery') %>%
+  addLayersControl(baseGroups=c('Streets','Imagery'),options = layersControlOptions(collapsed = F, autoZIndex =T)) %>% 
+    addCircleMarkers(data= filtereddata(), lng= ~lon, lat= ~lat, color=~pal(screentest))  %>%
+    addAwesomeMarkers(lng=~lon, lat=~lat, icon=icons, popup= ~centerinformation) %>% addLegend(pal=pal, values=~screentest, title="Covid-19 test", opacity=1, position="bottomright")
+  })
+
+leafletOutput('map', height=0)
+```
+<font size="1"> Source:[Ministry of Health and Welfare, South Korea](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0)</font>
+
+****
+<font size="1">
+※ 호흡기 증상이나 코로나19 증상 의심시에는 먼저 관할 보건소 또는 1339콜센터 등의 상담을 받으신 후 선별진료소를 방문하십시오.<br>
+※ If you have respiratory symptoms or any sign of possible COVID-19 symptoms, please call 1339 or public health center first for medical consultation, and then visit a COVID-19 screening center in your area.<br>
+※ 出现呼吸道症状或疑似感染新型冠状病毒肺炎时，请先向管辖区保健所或1339呼叫中心进行咨询后再前往指定诊疗机构.</font>
+
+
+
+
+
+
+
+Statistics
+============================
+
+```{r}
+library(plotly)
+library(ggplot2)
+library(tidyverse)
+urlfile2= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/daily_total.csv"
+dat <- read_csv(url(urlfile2))
+covid19 <- data.frame(t(dat[-1]))
+colnames(covid19)[1:5] <- c("test", "negative", "confirmed", "released", "death")
+covid19<-tibble::rownames_to_column(covid19, "date") 
+covid19 <- covid19 %>%
+  mutate(cumconfirmed = cumsum(confirmed)) %>%
+  mutate(cumdeath = cumsum(death)) %>%
+  mutate(cumreleased = cumsum(released)) %>%
+  mutate(date = as.Date(date, format="%m/%d/%Y"))
+urlfile3= "https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/daily_province.csv"
+caseProvince <- read_csv(url(urlfile3))
+colnames(caseProvince)[1:1] <- c("date")
+caseProvince <- caseProvince %>%
+  mutate(cumSeoul = cumsum(Seoul)) %>%
+  mutate(cumDaegu = cumsum(Daegu)) %>%
+  mutate(cumGyeonggi = cumsum(Gyeonggido)) %>%
+  mutate(cumGyeongbuk = cumsum(Gyeongsangbukdo)) %>%
+  mutate(date = as.Date(date, format="%m/%d/%Y"))
+urlfile4="https://raw.githubusercontent.com/Yunjeong-Kim/covid19_south_korea/master/daily_province_time_series.csv"
+provinceMap <- read_csv(url(urlfile4))
+total <- data.frame(rowSums(provinceMap[,-1:-3]))
+sidoList <- data.frame(provinceMap[,1:3])
+total <- cbind(total, sidoList)
+newCol <- c("cumulative", "province", "lat", "lon")
+colnames(total) <- newCol
+  
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+confirmed <- as.numeric(apply(covid19[4], 2, sum))
+death <- as.numeric(apply(covid19[6], 2, sum))
+tested <- as.numeric(apply(covid19[2], 2, sum))
+released <- as.numeric(apply(covid19[5], 2, sum))
+city <- levels(as.factor(total$province))
+inputPanel(
+  h3('COVID-19 Status'),
+  selectInput("city", label = "Select your city", choices = city, selected = "Daegu", width=180))
+```
+
+```{r}
+output$confirmed <- renderPrint({confirmed})
+output$death <- renderPrint({death})
+output$deathrate <- renderPrint({death/confirmed})
+output$tested <- renderPrint({tested})
+output$released <- renderPrint({released})
+```
+
+
+##### Total Confirmed {.value-box}
+```{r}
+renderValueBox({
+  valueBox(
+    value = confirmed, 
+    color = "#4682B4"
+  )
+})
+```
+
+##### Total Death {.value-box}
+```{r}
+renderValueBox({
+  valueBox(
+    value = death, 
+    color = "#20B2AA"
+  )
+})
+```
+
+##### Total Tested {.value-box}
+```{r}
+renderValueBox({
+  valueBox(
+    value = tested, 
+    color = "#20B2AA"
+  )
+})
+```
+
+##### Total Released {.value-box}
+```{r}
+renderValueBox({
+  valueBox(
+    value = released, 
+    color = "#20B2AA"
+  )
+})
+```
+<br>
+<font size="1"> Source:[Korea Centers for Disease and Prevention](http://www.cdc.go.kr/index.es?sid=a2)</font>
+
+
+
+Column {data-width = 450}
+-----------------------------------------------------------------------
+### COVID-19 South Korea Map 
+
+```{r}
+library(leaflet)
+total$province <- as.factor(total$province)
+subDat <- reactive({
+  total %>% 
+    mutate(selected = 0)
+  })
+finalDat <- reactive({
+  subDat() %>%
+    mutate(selected = ifelse((length(input$city) > 0) & (province == noquote(input$city)), 1, 0))
+})
+pals <- colorFactor(c("#4169E1", "#DC143C"), domain = c(1, 0))
+renderLeaflet({
+  leaflet(finalDat()) %>%
+    addProviderTiles(provider = "CartoDB.Positron") %>%
+    addCircleMarkers(
+      stroke = FALSE,
+      lng = ~lon, lat = ~lat,
+      label = ~cumulative, 
+      radius = ~sqrt(cumulative),
+      color = ~pals(selected),
+      labelOptions = labelOptions(
+        noHide = TRUE, 
+        offset=c(0,-12),
+        textOnly=TRUE, 
+        style=list('color'='black', 'font-size'='15px')                                      ))
+  
+})
+```
+
+
+Column {data-width= 450}
+-----------------------------------------------------------------------
+
+### Daily Cases and Released
+
+```{r}
+colors1 <- c("Daily Confirmed" = "#FC4E07", "Daily Released" = "#4682B4")
+plot1 <-ggplot(covid19, ) +
+        #geom_bar(aes(x=date, y=confirmed, fill = "Daily Confirmed"), stat = "identity") + 
+        geom_line(aes(x=date, y=confirmed, color = "Daily Confirmed"), stat="identity", size = 1.5) +
+        geom_line(aes(x=date, y=released, color = "Daily Released"), stat="identity", size = 1.5) +
+        labs(x="Date", y="Number", color="Legend") +
+        scale_color_manual(values = colors1) +
+        theme(axis.text.x=element_text(angle=45,hjust=1)) +
+        theme_minimal()
+plot1
+ggplotly(plot1)
+```
+
+### Total Cases and Death
+
+```{r}
+colors2 <- c("Cumulative Confirmed" = "#4682B4", "Cumulative Death" = "#E7B800")
+plot2 <-ggplot(covid19, ) +
+        geom_line(aes(x=date, y=cumdeath, color = "Cumulative Death"), stat="identity", size = 1.5) +
+        geom_line(aes(x=date, y=cumconfirmed, color = "Cumulative Confirmed"), stat="identity", size = 1.5) +
+        labs(x="Date", y="Number", color="Legend") +
+        scale_color_manual(values = colors2) +
+        theme(axis.text.x=element_text(angle=45,hjust=1)) +
+        theme_minimal()
+plot2
+ggplotly(plot2)
+```
+
+### Cases by City/Province
+
+```{r}
+colors3 <- c("Seoul"="steelblue", "Daegu"="#FC4E07", "Gyeonggi-do"="#00AFBB", "Gyeongsangbuk-do" = "#E7B800")
+plot3 <- ggplot(caseProvince, ) +
+  geom_line(aes(x=date, y=cumSeoul, color = "Seoul"), stat="identity", size = 1.5) +
+  geom_line(aes(x=date, y=cumDaegu, color = "Daegu"), stat="identity", size = 1.5) +
+  #geom_line(aes(x=date, y=cumGyeonggi, color = "Gyeonggi-do"), stat="identity", size = 1.5) +
+  geom_line(aes(x=date, y=cumGyeongbuk, color = "Gyeongsangbuk-do"), stat="identity", size = 1.5) +
+  labs(x="Date", y="Confirmed Cases", color="Legend") +
+  scale_color_manual(values = colors3) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  theme_minimal()
+plot3
+ggplotly(plot3)
+```
+
+
+About
+===================
+
+<font size="2">The data and dashboard are refreshed on a daily basis.</font>
+
+
+<font size="2">The raw data is pulled from [Korea Center for Disease Control and Prevention(KCDC)](https://www.cdc.go.kr/cdc_eng/) and [Ministry of Health and Welfare](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0).</font>
+
+<br>
+
+**COVID-19 in South Korea**
+
+This app is for the COVID-19 in South Korea mapping project for "Data Science for Public Health 1" at Johns Hopkins Bloomberg School of Public Health. 
+
+<br>
+
+**COVID-19 South Korea App**
+
+https://taeeun-kwon.shinyapps.io/covid19_SouthKorea/
+
+We have two sections in our app. The first section is an interactive map which shows all COVID-19 testing centers in South Korea, and the second section is the statistics of cumulative, daily and released cases in South Korea from January to current time. 
+
+<br>
+
+**Data source**
+
+1. Covid-19 Testing Center Map 
+ We have two sections in our app. The first section is an interactive map which shows all testing centers in South Korea. The data were scrapped from Korean [Ministry of Health and Welfare](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0). We added the GPS data (latitude and longitude) of each testing center based on google map. We color-coded the testing centers according to COVID-19 testing availability and also included detailed information of each testing center. 
+
+2. Statistics 
+ The data were extracted from [DS4C (Data Science for COVID19)](https://github.com/jihoo-kim/Data-Science-for-COVID-19) and edited with additional data from [Korea Center for Disease Control and Prevention(KCDC)](https://www.cdc.go.kr/cdc_eng/).
+  
+<br> 
+  
+**Team Members and Role**
+
+ * *Taeeun Kwon (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 testing centers data, Designing and Coding for the interactive map of COVID-19 testing centers and overall dashboard.
+
+ * *Shudi Pan (Johns Hopkins Bloomberg School of Public Health)* : Coding for the basic structure of the interactive map of COVID-19 testing centers as well as further improvements. 
+
+ * *Yunjeong Kim (Johns Hopkins Bloomberg School of Public Health)* : Collecting COVID-19 case data, Designing the overall structure of the Statistic Page, Coding for visualization of COVID-19 statistics (including plotting and mapping) in the statistic page.
+
+<br>
+
+**Acknowledgements**
+
+ Thanks sincerely to *JunYoung Kim (University of Nevada Las Vegas, DataX Lab)* for his contribution to data collection.
+
+<br>
+
+**Disclaimer**
+
+ This is an assignment of Johns Hopkins Data Science for Public Health. 
+
+<br>
+
+**Contact**
+
+ For any question or feedback, you can contact us (tkwon5@jh.edu). More information about this dashboard can be found in this [github](https://github.com/Yunjeong-Kim/covid19_south_korea).
