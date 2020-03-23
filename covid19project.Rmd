@@ -76,13 +76,16 @@ icons <- awesomeIcons(
   icon = 'hospital-o',  
   library = 'fa',
     iconColor = ~pal(screentest))
-renderLeaflet({leaflet(filtereddata()) %>%
+
+output$map <- renderLeaflet({leaflet(filtereddata()) %>%
 addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
   addProviderTiles('Esri.WorldImagery',group='Imagery') %>%
   addLayersControl(baseGroups=c('Streets','Imagery'),options = layersControlOptions(collapsed = F, autoZIndex =T)) %>% 
     addCircleMarkers(data= filtereddata(), lng= ~lon, lat= ~lat, color=~pal(screentest))  %>%
     addAwesomeMarkers(lng=~lon, lat=~lat, icon=icons, popup= ~centerinformation) %>% addLegend(pal=pal, values=~screentest, title="Covid-19 test", opacity=1, position="bottomright")
   })
+
+leafletOutput('map', height=800)
 ```
 
 <font size="1"> Source:[Ministry of Health and Welfare, South Korea](https://www.mohw.go.kr/react/popup_200128_2.html?fbclid=IwAR0naRh5ksc0Vj7HUOboJmf1WLRx2EKV6YnNs_5ns4MJ6YQ2-JzyVwEHNA0)</font>
@@ -96,7 +99,7 @@ addProviderTiles('Esri.WorldStreetMap', group='Streets') %>%
 
 
 
-Statistics
+Statistics {data-orientation=rows}
 ============================
 
 ```{r}
@@ -132,7 +135,7 @@ colnames(total) <- newCol
   
 ```
 
-Column {.sidebar}
+Column {.sidebar data-width=600 data-padding=10}
 -----------------------------------------------------------------------
 
 ```{r}
@@ -146,59 +149,6 @@ inputPanel(
   selectInput("city", label = "Select your city", choices = city, selected = "Daegu", width=180))
 ```
 
-```{r}
-output$confirmed <- renderPrint({confirmed})
-output$death <- renderPrint({death})
-output$deathrate <- renderPrint({death/confirmed})
-output$tested <- renderPrint({tested})
-output$released <- renderPrint({released})
-```
-
-
-##### Total Confirmed {.value-box}
-```{r}
-renderValueBox({
-  valueBox(
-    value = confirmed
-  )
-})
-```
-
-##### Total Death {.value-box}
-```{r}
-renderValueBox({
-  valueBox(
-    value = death
-  )
-})
-```
-
-##### Total Tested {.value-box}
-```{r}
-renderValueBox({
-  valueBox(
-    value = tested
-  )
-})
-```
-
-##### Total Released {.value-box}
-```{r}
-renderValueBox({
-  valueBox(
-    value = released
-  )
-})
-```
-<br>
-<br>
-<br>
-<font size="1"> Source:[Korea Centers for Disease and Prevention](http://www.cdc.go.kr/index.es?sid=a2)</font>
-
-
-
-Column {data-width = 450}
------------------------------------------------------------------------
 ### COVID-19 South Korea Map 
 
 ```{r}
@@ -212,8 +162,9 @@ finalDat <- reactive({
   subDat() %>%
     mutate(selected = ifelse((length(input$city) > 0) & (province == noquote(input$city)), 1, 0))
 })
-pals <- colorFactor(c("#4169E1", "#DC143C"), domain = c(1, 0))
-renderLeaflet({
+pals <- colorFactor(c("#4169E1", "#CD5C5C"), domain = c(1, 0))
+
+output$leaf <- renderLeaflet({
   leaflet(finalDat()) %>%
     addProviderTiles(provider = "CartoDB.Positron") %>%
     addCircleMarkers(
@@ -229,16 +180,56 @@ renderLeaflet({
         style=list('color'='black', 'font-size'='15px')                                      ))
   
 })
+leafletOutput('leaf', height=500)
 ```
 
 
-Column {data-width= 450}
+Row {style="height:8pc;"}
+-----------------------------------------------------------------------
+
+### Total Confirmed {.value-box}
+```{r}
+renderValueBox({  valueBox(
+                  value = confirmed,
+                  icon = "fa-hospital")})
+```
+
+### Total Death {.value-box}
+```{r}
+renderValueBox({  valueBox(
+                  value = death,
+                  icon = "fa-user")})
+```
+
+### Death Rate {.value-box}
+```{r}
+renderValueBox({  valueBox(
+                  value = format(round(death/confirmed, 2), nsmall=2),
+                  icon = "fa-percent")})
+```
+
+### Total Tested {.value-box}
+```{r}
+renderValueBox({  valueBox(
+                  value = tested,
+                  icon = "fa-area-chart")})
+```
+
+### Total Released {.value-box}
+```{r}
+renderValueBox({  valueBox(
+                  value = released,
+                  icon = "fa-tree")})
+```
+
+
+Row {style="height:22pc;"}
 -----------------------------------------------------------------------
 
 ### Daily Cases and Released
 
 ```{r}
-colors1 <- c("Daily Confirmed" = "#FC4E07", "Daily Released" = "#4682B4")
+colors1 <- c("Daily Confirmed" = "#CD5C5C", "Daily Released" = "#4682B4")
 plot1 <-ggplot(covid19, ) +
         #geom_bar(aes(x=date, y=confirmed, fill = "Daily Confirmed"), stat = "identity") + 
         geom_line(aes(x=date, y=confirmed, color = "Daily Confirmed"), stat="identity", size = 1.5) +
@@ -251,6 +242,44 @@ plot1
 ggplotly(plot1)
 ```
 
+```{r}
+
+df <- data.frame(
+  group = c("confirmed", "death"), 
+  value = c(confirmed, death)
+  )
+
+df <- df %>%
+  mutate(value = as.numeric((value))) %>%
+  mutate(sum = sum(value)) %>%
+  mutate(per = value/sum)
+
+color4 <-  c('rgb(211,94,96)', 'rgb(128,133,133)', 'rgb(144,103,167)')
+
+#plot_ly(df, labels=~group, values=~value, type = 'pie', 
+ #       textposition = 'inside',
+ #      textinfo = 'label+percent',
+ #       insidetextfont = list(color = '#FFFFFF'),
+  #      hoverinfo = ~'text',
+   #     text = ~paste(per, '% (', value, ')'), 
+    #    marker = list(colors = colors), showlegend = TRUE)
+```
+
+### Total Cases by City
+```{r}
+
+totalCity <- data.frame(colSums(caseProvince[, 2:18]))
+colnames(totalCity)[1] <- "cases"
+totalCity <- tibble::rownames_to_column(totalCity, "city") 
+
+plot_ly(totalCity, y=~city, x=~cases, type='bar', name='case') %>%
+  layout(xaxis = list(title = 'Number of cases'))
+
+
+```
+
+Row {style="height:20pc;"}
+-----------------------------------------------------------------------
 ### Total Cases and Death
 
 ```{r}
@@ -266,10 +295,11 @@ plot2
 ggplotly(plot2)
 ```
 
-### Cases by City/Province
+
+### Daily Cases by City
 
 ```{r}
-colors3 <- c("Seoul"="steelblue", "Daegu"="#FC4E07", "Gyeonggi-do"="#00AFBB", "Gyeongsangbuk-do" = "#E7B800")
+colors3 <- c("Seoul"="steelblue", "Daegu"="#CD5C5C", "Gyeonggi-do"="#00AFBB", "Gyeongsangbuk-do" = "#E7B800")
 plot3 <- ggplot(caseProvince, ) +
   geom_line(aes(x=date, y=cumSeoul, color = "Seoul"), stat="identity", size = 1.5) +
   geom_line(aes(x=date, y=cumDaegu, color = "Daegu"), stat="identity", size = 1.5) +
@@ -282,6 +312,7 @@ plot3 <- ggplot(caseProvince, ) +
 plot3
 ggplotly(plot3)
 ```
+
 
 About
 ===================
